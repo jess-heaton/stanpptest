@@ -13,6 +13,181 @@
   width="400" 
   height="600">
 </iframe>
+<script>
+  // =====================================================
+  // 1) FOLLOW UP FORM EXTENSION
+  // =====================================================
+  const FollowUpFormExtension = {
+    name: 'FollowUpForm',
+    type: 'response',
+    match: ({ trace }) =>
+      trace.type === 'Custom_Form_FollowUp' ||
+      trace.payload.name === 'Custom_Form_FollowUp',
+    render: ({ trace, element }) => {
+      const formContainer = document.createElement('form');
+      formContainer.innerHTML = `
+        <style>
+          label {
+            font-size: 0.8em;
+            color: #888;
+          }
+          input[type="text"],
+          input[type="email"],
+          input[type="tel"] {
+            width: 100%;
+            border: none;
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+            background: transparent;
+            margin: 5px 0;
+            outline: none;
+            padding: 8px 0;
+          }
+          .submit {
+            background: linear-gradient(to right, #2e6ee1, #2e7ff1);
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            width: 100%;
+            cursor: pointer;
+          }
+        </style>
 
+        <label for="name">Name</label>
+        <input type="text" class="name" name="name" required><br><br>
+
+        <label for="phone">Phone Number</label>
+        <input type="tel" class="phone" name="phone"
+               required pattern="\\+?[0-9\\- ]+"
+               title="Invalid phone number"><br><br>
+
+        <label for="email">Work Email</label>
+        <input type="email" class="email" name="email"
+               required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$"
+               title="Invalid email address"><br><br>
+
+        <label for="company">Company Name</label>
+        <input type="text" class="company" name="company" required><br><br>
+
+        <input type="submit" class="submit" value="Submit">
+      `;
+
+      formContainer.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const name = formContainer.querySelector('.name').value;
+        const phone = formContainer.querySelector('.phone').value;
+        const email = formContainer.querySelector('.email').value;
+        const company = formContainer.querySelector('.company').value;
+          
+        // Grab the current URL
+        const currentURL = window.location.href;
+        console.log('Current URL is:', currentURL); // Debugging: see if you get the URL
+
+        // Send it all to Voiceflow, including the URL
+        window.voiceflow.chat.interact({
+          type: 'complete',
+          payload: { 
+            name, 
+            phone, 
+            email, 
+            company,
+            url: currentURL // <--- here!
+          },
+        });
+      });
+
+      element.appendChild(formContainer);
+    },
+  };
+</script>
+
+<!-- =====================================================
+     2) REQUEST SAMPLES FORM EXTENSION
+===================================================== -->
+<script>
+  const SamplesFormExtension = {
+    name: 'SamplesForm',
+    type: 'response',
+    match: ({ trace }) =>
+      trace.type === 'Custom_Form_RequestSamples' ||
+      trace.payload.name === 'Custom_Form_RequestSamples',
+    render: ({ trace, element }) => {
+      const formContainer = document.createElement('form');
+      formContainer.innerHTML = `
+        <style>
+          label {
+            font-size: 0.8em;
+            color: #888;
+          }
+          input[type="text"] {
+            width: 100%;
+            border: none;
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+            background: transparent;
+            margin: 5px 0;
+            outline: none;
+            padding: 8px 0;
+          }
+          .submit {
+            background: linear-gradient(to right, #2e6ee1, #2e7ff1);
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            width: 100%;
+            cursor: pointer;
+          }
+        </style>
+
+        <label for="name">Name</label>
+        <input type="text" class="name" name="name" required><br><br>
+
+        <label for="postal">Postal Address</label>
+        <input type="text" class="postal" name="postal" required><br><br>
+
+        <label for="company">Company Name</label>
+        <input type="text" class="company" name="company" required><br><br>
+
+        <input type="submit" class="submit" value="Submit">
+      `;
+
+      formContainer.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const name = formContainer.querySelector('.name').value;
+        const postal = formContainer.querySelector('.postal').value;
+        const company = formContainer.querySelector('.company').value;
+
+        window.voiceflow.chat.interact({
+          type: 'complete',
+          payload: { name, postal, company },
+        });
+      });
+
+      element.appendChild(formContainer);
+    },
+  };
+</script>
+
+<!-- =====================================================
+     3) LOAD THE WIDGET WITH EXTENSIONS
+===================================================== -->
+<script>
+  // Load the pop-up chat widget
+  (function (d, t) {
+    var v = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    v.onload = function () {
+      window.voiceflow.chat.load({
+        verify: { projectID: '6760adeb289aab95d4721254' },
+        url: 'https://general-runtime.voiceflow.com',
+        versionID: 'production',
+        assistant: { extensions: [FollowUpFormExtension, SamplesFormExtension] },
+      });
+    };
+    v.src = 'https://cdn.voiceflow.com/widget/bundle.mjs';
+    v.type = 'module';
+    s.parentNode.insertBefore(v, s);
+  })(document, 'script');
+</script>
 </body>
 </html>
